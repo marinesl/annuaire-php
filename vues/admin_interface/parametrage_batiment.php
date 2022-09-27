@@ -1,11 +1,6 @@
-<?php 
-	// CONNEXION A LA BASE DE DONNEES	
-	include('../../connexion/connexionBdd.php');
-?>	
-
 <!-- BOUTON AJOUTER -->
 <div class="pull-right">
-	<a href="#ajouterbatiment" data-toggle="modal" data-backdrop="false"><span class="glyphicon glyphicon-plus"></span>&nbsp;Ajouter</a>
+	<a href="#ajouterbatiment" data-toggle="modal" data-backdrop="false"><i class="fa-solid fa-plus"></i>Ajouter</a>
 </div>
 
 <!-- FENETRE MODALE AJOUTER -->
@@ -51,76 +46,80 @@
 	</thead>
 	<tbody>
 		<?php
-			$queryBat = mysqli_query($connectBdd, "SELECT * FROM annuaire_param_batiment");
-			while($resultBat = mysqli_fetch_assoc($queryBat))
-			{
-				echo "<tr>\n";
-				// echo "<td>\n";
-				// echo $resultBat['id_Pbatiment'];
-				// echo "</td>\n";
-				echo "<td>\n";
-				echo $resultBat['lib_bat'];
-				echo "</td>\n";
-				echo "<td>\n";
-				echo $resultBat['actif_bat'];
-				echo "</td>\n";
-				echo "<td>\n";
-				echo $resultBat['createur_bat'];
-				echo "</td>\n";
-				echo "<td>\n";
-				echo $resultBat['modificateur_bat'];
-				echo "</td>\n";
-				echo "<td>\n";
-				echo $resultBat['date_crea_bat'];
-				echo "</td>\n";
-				echo "<td>\n";
-				echo $resultBat['date_modif_bat'];
-				echo "</td>\n";
-				echo "<td>\n";
-				echo "<center><a href=\"#batiment".$resultBat['id_Pbatiment']."\" data-toggle=\"modal\" data-backdrop=\"false\"><span class=\"glyphicon glyphicon-pencil\"></span></a></center>";
-				echo "</td>\n";
-				echo "</tr>\n";
-		?>		
-			<!-- FENETRE MODALE MODIFIER -->
-			<div class="modal" id="<?php echo "batiment".$resultBat['id_Pbatiment']; ?>">
-				<div class="modal-dialog">
-					<div class="modal-content">
-						<div class="modal-header">
-							<h5 class="modal-title">Modifier un bâtiment</h5>
-						</div>
-						<div class="modal-body">
-							<form class="form-horizontal col-lg-offset-1" name="formBat2" method="post" action="admin_interface/parametrage_batiment_modifier.php">								
-								<div class="form-group">
-									<div class="row">
-										<label class="col-lg-2">ID</label>
-										<input type="hidden" name="id" value="<?php echo $resultBat['id_Pbatiment']; ?>">
-										<?php echo $resultBat['id_Pbatiment']; ?>
-									</div>
-								
-									<div class="row">
-										<label class="col-lg-2">Libellé</label>
-										<input type="text" name="libelle2" value="<?php echo $resultBat['lib_bat']; ?>">
-									</div>
+			$sqlBat = "SELECT * FROM annuaire_php_param_batiment";
+			$queryBat = $connectBdd->prepare($sqlBat);
+			$queryBat->execute();
+			$resultBat = ($queryBat->rowCount() === 0) ? 0 : $queryBat->fetchAll();
+
+			if ($resultBat !== 0) {
+				for ($i = 0 ; $i < count($resultBat) ; $i++) {
+					echo "<tr>\n";
+					// echo "<td>\n";
+					// echo $resultBat[$i]['id_Pbatiment'];
+					// echo "</td>\n";
+					echo "<td>\n";
+					echo $resultBat[$i]['lib_bat'];
+					echo "</td>\n";
+					echo "<td>\n";
+					echo $resultBat[$i]['actif_bat'];
+					echo "</td>\n";
+					echo "<td>\n";
+					echo $resultBat[$i]['createur_bat'];
+					echo "</td>\n";
+					echo "<td>\n";
+					echo $resultBat[$i]['modificateur_bat'];
+					echo "</td>\n";
+					echo "<td>\n";
+					echo $resultBat[$i]['date_crea_bat'];
+					echo "</td>\n";
+					echo "<td>\n";
+					echo $resultBat[$i]['date_modif_bat'];
+					echo "</td>\n";
+					echo "<td>\n";
+					echo "<center><a href=\"#batiment".$resultBat[$i]['id_Pbatiment']."\" data-toggle=\"modal\" data-backdrop=\"false\"><i class=\"fa-solid fa-pen\"></i></a></center>";
+					echo "</td>\n";
+					echo "</tr>\n";
+			?>		
+				<!-- FENETRE MODALE MODIFIER -->
+				<div class="modal" id="<?php echo "batiment".$resultBat[$i]['id_Pbatiment']; ?>">
+					<div class="modal-dialog">
+						<div class="modal-content">
+							<div class="modal-header">
+								<h5 class="modal-title">Modifier un bâtiment</h5>
+							</div>
+							<div class="modal-body">
+								<form class="form-horizontal col-lg-offset-1" name="formBat2" method="post" action="admin_interface/parametrage_batiment_modifier.php">								
+									<div class="form-group">
+										<div class="row">
+											<label class="col-lg-2">ID</label>
+											<input type="hidden" name="id" value="<?php echo $resultBat[$i]['id_Pbatiment']; ?>">
+											<?php echo $resultBat[$i]['id_Pbatiment']; ?>
+										</div>
 									
-									<div class="row">
-										<label class="col-lg-2">Actif</label>
-										<input type="text" name="actif" value="<?php echo $resultBat['actif_bat']; ?>">&nbsp;&nbsp;
-										Activé = 1&nbsp;&nbsp;&nbsp;Désactivé = 0
+										<div class="row">
+											<label class="col-lg-2">Libellé</label>
+											<input type="text" name="libelle2" value="<?php echo $resultBat[$i]['lib_bat']; ?>">
+										</div>
+										
+										<div class="row">
+											<label class="col-lg-2">Actif</label>
+											<input type="text" name="actif" value="<?php echo $resultBat[$i]['actif_bat']; ?>">&nbsp;&nbsp;
+											Activé = 1&nbsp;&nbsp;&nbsp;Désactivé = 0
+										</div>
+										
+										<div class="pull-right">
+											<button class="btn btn-primary" type="submit">Modifier</button>&nbsp;
+											<button class="btn btn-primary" data-dismiss="modal">Fermer</button>&nbsp;
+										</div>
 									</div>
-									
-									<div class="pull-right">
-										<button class="btn btn-primary" type="submit">Modifier</button>&nbsp;
-										<button class="btn btn-primary" data-dismiss="modal">Fermer</button>&nbsp;
-									</div>
-								</div>
-							</form>
-							<br>
-						</div>
-					</div>	<!-- .modal-content -->
-				</div>	<!-- .modal-dialog -->
-			</div>	<!-- .modal -->
+								</form>
+								<br>
+							</div>
+						</div>	<!-- .modal-content -->
+					</div>	<!-- .modal-dialog -->
+				</div>	<!-- .modal -->
 		<?php 
-			}
+			} }
 		?>
 	</tbody>
 </table>

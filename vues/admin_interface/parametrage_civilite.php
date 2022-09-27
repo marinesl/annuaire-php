@@ -1,11 +1,6 @@
-<?php
-	// CONNEXION A LA BASE DE DONNEES
-	include('../../connexion/connexionBdd.php');
-?>	
-
 <!-- BOUTON AJOUTER -->
 <div class="pull-right">
-	<a href="#ajoutercivilite" data-toggle="modal" data-backdrop="false"><span class="glyphicon glyphicon-plus"></span>&nbsp;Ajouter</a>
+	<a href="#ajoutercivilite" data-toggle="modal" data-backdrop="false"><i class="fa-solid fa-plus"></i>Ajouter</a>
 </div>
 
 <!-- FENETRE MODALE AJOUTER -->
@@ -51,77 +46,81 @@
 	</thead>
 	<tbody>
 		<?php
-			$queryCiv = mysqli_query($connectBdd, "SELECT * FROM annuaire_param_civilite");
-			while($resultCiv = mysqli_fetch_assoc($queryCiv))
-			{
-				echo "<tr>\n";
-				// echo "<td>\n";
-				// echo $resultCiv['id_Pcivilite'];
-				// echo "</td>\n";
-				echo "<td>\n";
-				echo $resultCiv['lib_civ'];
-				echo "</td>\n";
-				echo "<td>\n";
-				echo $resultCiv['actif_civ'];
-				echo "</td>\n";
-				echo "<td>\n";
-				echo $resultCiv['createur_civ'];
-				echo "</td>\n";
-				echo "<td>\n";
-				echo $resultCiv['modificateur_civ'];
-				echo "</td>\n";
-				echo "<td>\n";
-				echo $resultCiv['date_crea_civ'];
-				echo "</td>\n";
-				echo "<td>\n";
-				echo $resultCiv['date_modif_civ'];
-				echo "</td>\n";
-				echo "<td>\n";
-				echo "<center><a href=\"#civilite".$resultCiv['id_Pcivilite']."\" data-toggle=\"modal\" data-backdrop=\"false\"><span class=\"glyphicon glyphicon-pencil\"></span></a></center>";
-				echo "</td>\n";
-				echo "</tr>\n";
-		?>
-			<!-- FENETRE MODALE MODIFIER -->
-			<div class="modal" id="<?php echo "civilite".$resultCiv['id_Pcivilite']; ?>">
-				<div class="modal-dialog">
-					<div class="modal-content">
-						<div class="modal-header">
-							<h5 class="modal-title">Modifier une civilité</h5>
-						</div>
-						<div class="modal-body">
-							<form class="form-horizontal col-lg-offset-1" name="formCiv2" method="post" action="admin_interface/parametrage_civilite_modifier.php">								
-								<div class="form-group">
-									<div class="row">
-										<label class="col-lg-2">ID</label>
-										<input type="hidden" name="id" value="<?php echo $resultCiv['id_Pcivilite']; ?>">
-										<?php echo $resultCiv['id_Pcivilite']; ?>
-									</div>
-								
-									<div class="row">
-										<label class="col-lg-2">Libellé</label>
-										<input type="text" name="libelle2" value="<?php echo $resultCiv['lib_civ']; ?>">
-									</div>
+			$sqlCiv = "SELECT * FROM annuaire_php_param_civilite";
+			$queryCiv = $connectBdd->prepare($sqlCiv);
+			$queryCiv->execute();
+			$resultCiv = ($queryCiv->rowCount() === 0) ? 0 : $queryCiv->fetchAll();
+
+			if ($resultCiv !== 0) {
+				for ($i = 0 ; $i < count($resultCiv) ; $i++) {
+					echo "<tr>\n";
+					// echo "<td>\n";
+					// echo $resultCiv[$i]['id_Pcivilite'];
+					// echo "</td>\n";
+					echo "<td>\n";
+					echo $resultCiv[$i]['lib_civ'];
+					echo "</td>\n";
+					echo "<td>\n";
+					echo $resultCiv[$i]['actif_civ'];
+					echo "</td>\n";
+					echo "<td>\n";
+					echo $resultCiv[$i]['createur_civ'];
+					echo "</td>\n";
+					echo "<td>\n";
+					echo $resultCiv[$i]['modificateur_civ'];
+					echo "</td>\n";
+					echo "<td>\n";
+					echo $resultCiv[$i]['date_crea_civ'];
+					echo "</td>\n";
+					echo "<td>\n";
+					echo $resultCiv[$i]['date_modif_civ'];
+					echo "</td>\n";
+					echo "<td>\n";
+					echo "<center><a href=\"#civilite".$resultCiv[$i]['id_Pcivilite']."\" data-toggle=\"modal\" data-backdrop=\"false\"><i class=\"fa-solid fa-pen\"></i></a></center>";
+					echo "</td>\n";
+					echo "</tr>\n";
+			?>
+				<!-- FENETRE MODALE MODIFIER -->
+				<div class="modal" id="<?php echo "civilite".$resultCiv[$i]['id_Pcivilite']; ?>">
+					<div class="modal-dialog">
+						<div class="modal-content">
+							<div class="modal-header">
+								<h5 class="modal-title">Modifier une civilité</h5>
+							</div>
+							<div class="modal-body">
+								<form class="form-horizontal col-lg-offset-1" name="formCiv2" method="post" action="admin_interface/parametrage_civilite_modifier.php">								
+									<div class="form-group">
+										<div class="row">
+											<label class="col-lg-2">ID</label>
+											<input type="hidden" name="id" value="<?php echo $resultCiv[$i]['id_Pcivilite']; ?>">
+											<?php echo $resultCiv[$i]['id_Pcivilite']; ?>
+										</div>
 									
-									<div class="row">
-										<label class="col-lg-2">Actif</label>
-										<input type="text" name="actif" value="<?php echo $resultCiv['actif_civ']; ?>">&nbsp;&nbsp;
-										Activé = 1&nbsp;&nbsp;&nbsp;Désactivé = 0
+										<div class="row">
+											<label class="col-lg-2">Libellé</label>
+											<input type="text" name="libelle2" value="<?php echo $resultCiv[$i]['lib_civ']; ?>">
+										</div>
+										
+										<div class="row">
+											<label class="col-lg-2">Actif</label>
+											<input type="text" name="actif" value="<?php echo $resultCiv[$i]['actif_civ']; ?>">&nbsp;&nbsp;
+											Activé = 1&nbsp;&nbsp;&nbsp;Désactivé = 0
+										</div>
+										
+										<div class="pull-right">
+											<button class="btn btn-primary" type="submit">Modifier</button>&nbsp;
+											<button class="btn btn-primary" data-dismiss="modal">Fermer</button>&nbsp;
+										</div>
 									</div>
-									
-									<div class="pull-right">
-										<button class="btn btn-primary" type="submit">Modifier</button>&nbsp;
-										<button class="btn btn-primary" data-dismiss="modal">Fermer</button>&nbsp;
-									</div>
-								</div>
-							</form>
-							<br>
-						</div>
-					</div>	<!-- .modal-content -->
-				</div>	<!-- .modal-dialog -->
-			</div>	<!-- .modal -->
+								</form>
+								<br>
+							</div>
+						</div>	<!-- .modal-content -->
+					</div>	<!-- .modal-dialog -->
+				</div>	<!-- .modal -->
 
 		<?php
-			}
+			} }
 		?>
 	</tbody>
 </table>

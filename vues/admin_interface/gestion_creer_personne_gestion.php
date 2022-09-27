@@ -28,54 +28,42 @@
 	
 	// SI LES CHAMPS 'NOM' ET 'PRENOM' SONT VIDES
 	// ON AFFICHE UN MESSAGE D'ERREUR SUR LE FORMULAIRE
-	if($nom == "" AND $prenom == "")
-	{
+	if ($nom == "" AND $prenom == "") {
 		$_SESSION['PERSONNE_panel'] = "open";
 		$_SESSION['PERSONNE_erreur_ko'] = "Veuillez remplir les champs avec un astérisque.";
 		header('location:../admin_accueil.php');
-	}
-	else
-	{
+	} else {
 		// SI LES CHAMPS BATIMENT, ETAGE ET PORTE SONT REMPLIS
 		// ON CHERCHE SI LA LOCALISATION CORRESPONDANTE EXISTE
-		if((!empty($batiment)) AND (!empty($etage)) AND (!empty($porte)))
-		{
+		if ((!empty($batiment)) AND (!empty($etage)) AND (!empty($porte))) {
 			// REQUETE SQL LOCALISATION
-			$querylocalisation1 = mysqli_query($connectBdd, "SELECT * FROM annuaire_param_localisation,annuaire_param_batiment,annuaire_param_etage,annuaire_param_porte
-																		WHERE annuaire_param_localisation.id_Pbatiment=annuaire_param_batiment.id_Pbatiment
-																		AND annuaire_param_localisation.id_Pporte=annuaire_param_porte.id_Pporte
-																		AND annuaire_param_localisation.id_Petage=annuaire_param_etage.id_Petage
-																		AND id_Pbatiment='".$batiment."'
-																		AND id_Pporte='".$porte."'
-																		AND id_Petage='".$etage."'
-																		AND actif_loca=1
-																		");
+			$sqllocalisation1 = "SELECT * 
+								FROM annuaire_php_param_localisation,annuaire_php_param_batiment,annuaire_php_param_etage,annuaire_php_param_porte
+								WHERE annuaire_php_param_localisation.id_Pbatiment=annuaire_php_param_batiment.id_Pbatiment
+								AND annuaire_php_param_localisation.id_Pporte=annuaire_php_param_porte.id_Pporte
+								AND annuaire_php_param_localisation.id_Petage=annuaire_php_param_etage.id_Petage
+								AND id_Pbatiment='".$batiment."'
+								AND id_Pporte='".$porte."'
+								AND id_Petage='".$etage."'
+								AND actif_loca=1";
+			$querylocalisation1 = $connectBdd->prepare($sqllocalisation1);
+			$querylocalisation1->execute();
+			$resultlocalisation1 = ($querylocalisation1->rowCount() === 0) ? 0 : $querylocalisation1->fetchAll();
 																		
-			$resultlocalisation1 = mysqli_fetch_assoc($querylocalisation1);		
-			$nb_localisation1 = mysqli_num_rows($querylocalisation1);
+			$nb_localisation1 = $querylocalisation1->rowCount();
 			
 			// SI LA LOCALISATION EXISTE DEJA
 			// ON MET A JOUR LA VARIABLE $localisation
-			if($nb_localisation1 == 1)
-			{
+			if ($nb_localisation1 == 1)
 				$localisation = $resultlocalisation1['id_Plocalisation'];
-			}
 			// SINON ON CREE LA LOCALISATION DANS LA BASE DE DONNEES
 			// ET ON MET A JOUR LA VARIABLE $localisation
-			else
-			{
-				$querylocalisation2 = mysqli_query($connectBdd, "INSERT INTO annuaire_param_localisation
-																			VALUES('',
-																					'".$batiment."',
-																					'".$etage."',
-																					'".$porte."',
-																					'1',
-																					'".$_SESSION['ANNUAIRE_ADMIN_aph']."',
-																					'',
-																					'".date("Y-m-d H:i:s")."',
-																					''
-																					)");
-				$localisation = mysqli_insert_id($connectBdd);
+			else {
+				$sqllocalistion2 = "INSERT INTO annuaire_php_param_localisation
+									VALUES('', '".$batiment."', '".$etage."', '".$porte."', '1', '".$_SESSION['ANNUAIRE_ADMIN_aph']."', '', '".date("Y-m-d H:i:s")."', '' )";
+				$querylocalisation2 = $connectBdd->prepare($sqllocalistion2);
+				$querylocalisation2->execute();
+				$localisation = ($querylocalisation2->rowCount() === 0) ? 0 : $querylocalisation2->fetchAll();
 			}
 		}
 		
@@ -113,15 +101,21 @@
 				$photo_type = $_FILES['photo']['type'];
 				$photo_nom = $_FILES['photo']['name'];
 				$photo_blob = file_get_contents($_FILES['photo']['tmp_name']);
-				$query = mysqli_query($connectBdd, "INSERT INTO annuaire_photo
-															VALUES('',
-																	'".addslashes($photo_blob)."'
-																	)") or die(mysqli_error());
-				$query2 = mysqli_query($connectBdd, "SELECT * FROM annuaire_photo WHERE id_photo='5'") or die (mysqli_error());
-				while($result2 = mysqli_fetch_assoc($query2))
-				{
-					header("Content-type: ".$photo_type);
-					echo $result2['blob'];
+				$sql = "INSERT INTO annuaire_photo
+						VALUES('', '".addslashes($photo_blob)."' )";
+				$query = $connectBdd->prepare($sql);
+				$query->execute();
+
+				$sql2 = "SELECT * FROM annuaire_photo WHERE id_photo='5'";
+				$query2 = $connectBdd->prepare($sql2);
+				$query2->execute();
+				$result2 = ($query2->rowCount() === 0) ? 0 : $query2->fetchAll();
+
+				if ($result2 !== 0) {
+    				for ($i = 0 ; $i < count($result2) ; $i++) {
+						header("Content-type: ".$photo_type);
+						echo $result2['blob'];
+					}
 				}
 			}
 		}
@@ -133,107 +127,78 @@
 		// SI L'ID N'EXISTE PAS
 		// ON CREE LA PERSONNE
 		// ET ON MET A JOUR L'ID
-		if($_POST['personne_id'] == "")
-		{
+		if ($_POST['personne_id'] == "") {
 			// REQUETE D'AJOUT D'UN ABONNE
-			$queryajouter = mysqli_query($connectBdd, "INSERT INTO annuaire_exploit_abonne 
-																VALUES('',
-																		'Personne',
-																		'".$civilite."',
-																		'".$nom."',
-																		'".$prenom."',
-																		'".$aph."',
-																		'".$fonction."',
-																		'".$localisation."',
-																		'',
-																		'999999999',
-																		'1',
-																		'".$_SESSION['ANNUAIRE_ADMIN_aph']."',
-																		'',
-																		'".date("Y-m-d H:i:s")."',
-																		''
-																		)");
-			$_SESSION['PERSONNE_id'] = mysqli_insert_id($connectBdd);
+			$sqlajouter = "INSERT INTO annuaire_php_exploit_abonne 
+							VALUES('', 'Personne', '".$civilite."', '".$nom."', '".$prenom."', '".$aph."', '".$fonction."', '".$localisation."', '', '999999999', '1', '".$_SESSION['ANNUAIRE_ADMIN_aph']."', '', '".date("Y-m-d H:i:s")."', '' )";
+			$queryajouter = $connectBdd->prepare($sqlajouter);
+			$queryajouter->execute();
+			$_SESSION['PERSONNE_id'] = ($queryajouter->rowCount() === 0) ? 0 : $queryajouter->fetchAll();
+
 			$_SESSION['PERSONNE_erreur_ok'] = "La personne a été ajoutée.";
-		}
+
 		// SINON ON MODIFIE LA PERSONNE
-		else
-		{
-			$querymodifier = mysqli_query($connectBdd,"UPDATE annuaire_exploit_abonne
-															SET id_Pcivilite='".$civilite."',
-															aph_personne='".$aph."',
-															id_Pfonction='".$fonction."',
-															id_Plocalisation='".$localisation."',
-															photo_personne='".$photo_blob."',
-															modificateur_ab='".$_SESSION['ANNUAIRE_ADMIN_aph']."',
-															date_modif_ab='".date("Y-m-d H:i:s")."'
-															WHERE id_Eabonne='".$_POST['personne_id']."'
-															");
+		} else {
+			$sqlmodifier = "UPDATE annuaire_php_exploit_abonne
+							SET id_Pcivilite='".$civilite."',
+							aph_personne='".$aph."',
+							id_Pfonction='".$fonction."',
+							id_Plocalisation='".$localisation."',
+							photo_personne='".$photo_blob."',
+							modificateur_ab='".$_SESSION['ANNUAIRE_ADMIN_aph']."',
+							date_modif_ab='".date("Y-m-d H:i:s")."'
+							WHERE id_Eabonne='".$_POST['personne_id']."'";
+			$querymodifier = $connectBdd->prepare($sqlmodifier);
+			$querymodifier->execute();
+
 			$_SESSION['PERSONNE_erreur_ok'] = "La personne a été modifiée.";
 		}
 		
 		// SI LE BOUTON AJOUTER UN SERVICE EXISTE
 		// ON AJOUTE UN SERVICE
-		if($boutonajouter == "service")
-		{
+		if ($boutonajouter == "service") {
 			// REQUETE AJOUT D'UN SERVICE
-			$queryservice1 = mysqli_query($connectBdd, "INSERT INTO annuaire_exploit_service
-															VALUES('',
-																	'".$_SESSION['PERSONNE_id']."',
-																	'".$service."',
-																	'1',
-																	'".$_SESSION['ANNUAIRE_ADMIN_aph']."',
-																	'',
-																	'".date("Y-m-d H:i:s")."',
-																	''
-																	)");
+			$sqlservice1 = "INSERT INTO annuaire_php_exploit_service
+							VALUES('', '".$_SESSION['PERSONNE_id']."', '".$service."', '1', '".$_SESSION['ANNUAIRE_ADMIN_aph']."', '', '".date("Y-m-d H:i:s")."', '' )";
+			$queryservice1 = $connectBdd->prepare($sqlservice1);
+			$queryservice1->execute();
 		}
 		
 		// SI LE BOUTON AJOUTER UN NUMERO EXISTE
 		// ON AJOUTE UN NUMERO
-		if($boutonajouter == "numero")
-		{
+		if ($boutonajouter == "numero") {
 			// REQUETE AJOUT D'UN NUMERO
-			$querynumero1 = mysqli_query($connectBdd, "INSERT INTO annuaire_exploit_numero
-															VALUES('',
-																	'',
-																	'".$communication."',
-																	'".$_SESSION['PERSONNE_id']."',
-																	'',
-																	'".$numero."',
-																	'1',
-																	'".$_SESSION['ANNUAIRE_ADMIN_aph']."',
-																	'',
-																	'".date("Y-m-d H:i:s")."',
-																	''
-																	)");
+			$sqlnumero1 = "INSERT INTO annuaire_php_exploit_numero
+							VALUES('', '', '".$communication."', '".$_SESSION['PERSONNE_id']."', '', '".$numero."', '1', '".$_SESSION['ANNUAIRE_ADMIN_aph']."', '', '".date("Y-m-d H:i:s")."', '' )";
+			$querynumero1 = $connectBdd->prepare($sqlnumero1);
+			$querynumero1->execute();
 		}
 		
 		// SI LE BOUTON SUPPRIMER UN SERVICE EXISTE
 		// ON MET L'ACTIF A 0
-		if(!empty($boutonsupprimerservice))
-		{
-			$queryservice2 = mysqli_query($connectBdd, "UPDATE annuaire_exploit_service
-																SET actif_Eser='0',
-																modificateur_Eser='".$_SESSION['ANNUAIRE_ADMIN_aph']."',
-																date_modif_Eser='".date("Y-m-d H:i:s")."'
-																WHERE id_Eabonne='".$_SESSION['PERSONNE_id']."'
-																AND id_Eservice='".$boutonsupprimerservice."'
-																");
+		if (!empty($boutonsupprimerservice)) {
+			$sqlservice2 = "UPDATE annuaire_php_exploit_service
+							SET actif_Eser='0',
+							modificateur_Eser='".$_SESSION['ANNUAIRE_ADMIN_aph']."',
+							date_modif_Eser='".date("Y-m-d H:i:s")."'
+							WHERE id_Eabonne='".$_SESSION['PERSONNE_id']."'
+							AND id_Eservice='".$boutonsupprimerservice."'";
+			$queryservice2 = $connectBdd->prepare($sqlservice2);
+			$queryservice2->execute();
 			$boutonsupprimerservice = "";
 		}
 		
 		// SI LE BOUTON SUPPRIMER UN NUMERO EXISTE
 		// ON MET L'ACTIF A 0
-		if(!empty($boutonsupprimernumero))
-		{
-			$querynumero2 = mysqli_query($connectBdd, "UPDATE annuaire_exploit_numero
-															SET actif_num='0',
-															modificateur_num='".$_SESSION['ANNUAIRE_ADMIN_aph']."',
-															date_modif_num='".date("Y-m-d H:i:s")."'
-															WHERE id_Enumero='".$boutonsupprimernumero."'
-															AND id_Eabonne='".$_SESSION['PERSONNE_id']."'
-															");
+		if (!empty($boutonsupprimernumero)) {
+			$sqlnumero2 = "UPDATE annuaire_php_exploit_numero
+							SET actif_num='0',
+							modificateur_num='".$_SESSION['ANNUAIRE_ADMIN_aph']."',
+							date_modif_num='".date("Y-m-d H:i:s")."'
+							WHERE id_Enumero='".$boutonsupprimernumero."'
+							AND id_Eabonne='".$_SESSION['PERSONNE_id']."' ";
+			$querynumero2 = $connectBdd->prepare($sqlnumero2);
+			$querynumero2->execute();
 			$boutonsupprimernumero = "";				
 		}
 		
